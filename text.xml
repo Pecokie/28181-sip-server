@@ -1,0 +1,18 @@
+<?xml version: "1.0" encoding="utf-8"?>
+<CMSearchDescription>
+    <searchID>C9C17DD9-54C0-0001-361A-B9E2180E1E5B</searchID>
+    <trackList>
+        <trackID>101</trackID>
+    </trackList>
+    <timeSpanList>
+        <timeSpan>
+            <startTime>2022-03-22T00:00:00Z</startTime>
+            <endTime>2022-03-22T10:20:59Z</endTime>
+        </timeSpan>
+    </timeSpanList>
+    <maxResults>50</maxResults>
+    <searchResultPostion>0</searchResultPostion>
+    <metadataList>
+        <metadataDescriptor>//recordType.meta.std-cgi.com</metadataDescriptor>
+    </metadataList>
+</CMSearchDescription>
