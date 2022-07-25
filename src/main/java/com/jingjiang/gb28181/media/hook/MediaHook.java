@@ -123,7 +123,11 @@ public class MediaHook {
         String[] split = stream.split("@");
         String host = split[0];
         String channel = split[1];
-        gb28181ApplicationService.play(host, channel, openRtpServer.getPort());
+        // 判断 是否正确获取到 RTP推流端口
+        if (openRtpServer.getCode() == 0) {
+            gb28181ApplicationService.play(host, channel, openRtpServer.getPort());
+        }
+
     }
 
     /**

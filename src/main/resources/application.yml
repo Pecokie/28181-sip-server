@@ -22,7 +22,7 @@ media:
   # 流媒体的内网API地址
   host: http://zlmediakit
   # 流媒体服务器地址，必须为录像机可访问到的公网IP
-  address: 8.218.12.243
+  address: 139.9.61.184
   # 流媒体接收流的端口
   port: 10000
 server:

@@ -85,4 +85,18 @@ public class Device {
     public void setViaTag(String viaTag) {
         this.viaTag = viaTag;
     }
+
+
+    @Override
+    public String toString() {
+        return "Device{" +
+                "address='" + address + '\'' +
+                ", port=" + port +
+                ", protocol='" + protocol + '\'' +
+                ", callIdHeader=" + callIdHeader +
+                ", fromHeader='" + fromHeader + '\'' +
+                ", toTag='" + toTag + '\'' +
+                ", viaTag='" + viaTag + '\'' +
+                '}';
+    }
 }

@@ -6,14 +6,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.sip.InvalidArgumentException;
 import javax.sip.SipException;
+import javax.sip.header.HeaderFactory;
 import java.text.ParseException;
+import java.util.Calendar;
+import java.util.Locale;
 
 @SpringBootTest
 class Gb28181ApplicationTests {
-
     @Autowired
-    GB28181ApplicationService gb28181ApplicationService;
-
+    SipRequestHeaderProvider sipRequestHeaderProvider;
     @Test
     void contextLoads() throws InvalidArgumentException, ParseException, SipException {
     }

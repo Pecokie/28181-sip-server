@@ -40,13 +40,7 @@ public class MediaApi {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         HttpEntity<MultiValueMap<String, Object>> httpEntity = new HttpEntity<>(map, headers);
         ResponseEntity<OpenRtpServer> response;
-        while (true) {
-            response = restTemplate.postForEntity(mediaServerProperties.getHost() + "/index/api/openRtpServer", httpEntity, OpenRtpServer.class);
-            OpenRtpServer body = response.getBody();
-            if (Objects.requireNonNull(body).getCode() == 0) {
-                break;
-            }
-        }
+        response = restTemplate.postForEntity(mediaServerProperties.getHost() + "/index/api/openRtpServer", httpEntity, OpenRtpServer.class);
         return response.getBody();
     }
 
