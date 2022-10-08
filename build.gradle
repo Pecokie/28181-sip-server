@@ -26,10 +26,7 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'com.google.guava:guava:31.1-jre'
-    implementation 'io.vertx:vertx-core:4.3.1'
 
-
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     implementation ('org.springframework.boot:spring-boot-starter-web') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter'
     }
@@ -39,6 +36,7 @@ dependencies {
     }
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
 
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

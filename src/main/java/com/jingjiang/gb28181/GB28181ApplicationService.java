@@ -2,9 +2,14 @@ package com.jingjiang.gb28181;
 
 import com.jingjiang.gb28181.configuration.SipDeviceHolder;
 import com.jingjiang.gb28181.configuration.SipProviderProxy;
+import com.jingjiang.gb28181.media.cache.MediaCacheHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.sip.*;
+import javax.sip.InvalidArgumentException;
+import javax.sip.SipException;
+import javax.sip.SipProvider;
 import javax.sip.header.CallIdHeader;
 import javax.sip.message.Request;
 import java.text.ParseException;
@@ -17,6 +22,8 @@ import java.util.Objects;
  */
 @Service
 public class GB28181ApplicationService {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(GB28181ApplicationService.class);
 
     private final SipInfoContext sipInfoContext;
     private final SipProviderProxy sipProviderProxy;
@@ -90,24 +97,32 @@ public class GB28181ApplicationService {
      *
      * @param host      地址
      * @param channelId 通道id
+     * @return
      * @throws InvalidArgumentException 无效参数异常
      * @throws SipException             Sip异常
      * @throws ParseException           解析异常
      */
     public void play(String host, String channelId, Integer port) throws InvalidArgumentException, SipException, ParseException {
-        int ssrc = (int) ((Math.random() * 9 + 1) * 100000000);
-        String context = sipInfoContext.playContext(ssrc, channelId, port);
-        Device device = SipDeviceHolder.sipDeviceMap.get(host);
-        SipDeviceHolder.sipDeviceMap.forEach((s, item) -> System.out.println(item));
-        SipProvider sipProvider = sipProviderProxy.getSipProvider(device.getProtocol());
-        CallIdHeader callId = sipProvider.getNewCallId();
-        String fromTag = String.valueOf(System.currentTimeMillis());
-        String viaTag = "z9hG4bK" + System.currentTimeMillis();
-        device.setCallIdHeader(callId);
-        device.setFromHeader(fromTag);
-        device.setViaTag(viaTag);
-        Request request = sipRequestHeaderProvider.createInviteRequest(device.getAddress(), device.getPort(), channelId, fromTag, viaTag, context, device.getProtocol(), callId);
-        sipProvider.getNewClientTransaction(request).sendRequest();
+        if (MediaCacheHolder.isExist(host + "@" + channelId)) {
+            LOGGER.info("{}@{} 流已存在", host, channelId);
+        } else {
+            int ssrc = (int) ((Math.random() * 9 + 1) * 100000000);
+            String context = sipInfoContext.playContext(ssrc, channelId, port);
+            Device device = SipDeviceHolder.sipDeviceMap.get(host);
+            SipDeviceHolder.sipDeviceMap.forEach((s, item) -> System.out.println(item));
+            SipProvider sipProvider = sipProviderProxy.getSipProvider(device.getProtocol());
+            CallIdHeader callId = sipProvider.getNewCallId();
+            String fromTag = String.valueOf(System.currentTimeMillis());
+            String viaTag = "z9hG4bK" + System.currentTimeMillis();
+            device.setCallIdHeader(callId);
+            device.setFromHeader(fromTag);
+            device.setViaTag(viaTag);
+            Request request = sipRequestHeaderProvider.createInviteRequest(device.getAddress(), device.getPort(), channelId, fromTag, viaTag, context, device.getProtocol(), callId);
+            sipProvider.getNewClientTransaction(request).sendRequest();
+
+            // 缓存中添加此流
+            MediaCacheHolder.put(Integer.toHexString(ssrc).toUpperCase(), host + "@" + channelId);
+        }
     }
 
     /**

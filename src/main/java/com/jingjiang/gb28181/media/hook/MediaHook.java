@@ -3,9 +3,10 @@ package com.jingjiang.gb28181.media.hook;
 import com.jingjiang.gb28181.GB28181ApplicationService;
 import com.jingjiang.gb28181.media.api.MediaApi;
 import com.jingjiang.gb28181.media.api.domain.OpenRtpServer;
-import com.jingjiang.gb28181.media.hook.domain.RecordMp4;
-import com.jingjiang.gb28181.media.hook.domain.StreamNoneReader;
-import com.jingjiang.gb28181.media.hook.domain.StreamNotFound;
+import com.jingjiang.gb28181.media.cache.MediaCacheHolder;
+import com.jingjiang.gb28181.media.hook.domain.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/index/hook")
 public class MediaHook {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(MediaHook.class);
 
     private final MediaApi mediaApi;
     private final GB28181ApplicationService gb28181ApplicationService;
@@ -52,8 +55,22 @@ public class MediaHook {
 
     /**
      * rtsp/rtmp/rtp推流鉴权事件。
+     *
+     * @return
      */
-    public void on_publish() {
+    @PostMapping("/on_publish")
+    public Map<String, Object> on_publish(@RequestBody Publish publish) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", 0);
+        map.put("msg", "success");
+        map.put("enable_hls", false);
+        map.put("enable_mp4", false);
+        map.put("enable_rtsp", true);
+        map.put("enable_rtmp", false);
+        map.put("enable_ts", false);
+        map.put("enable_fmp4", true);
+        map.put("enable_audio", false);
+        return map;
 
     }
 
@@ -90,8 +107,21 @@ public class MediaHook {
     /**
      * rtsp/rtmp流注册或注销时触发此事件
      */
-    public void on_stream_changed() {
+    @PostMapping("/on_stream_changed")
+    public Map<String, Object> on_stream_changed(@RequestBody StreamChanged streamChanged) {
+        // 持久化缓存
+        LOGGER.info("收到流-{}-事件 流ID: {} 协议: {}", streamChanged.getRegist() ? "注册" : "注销", streamChanged.getStream(), streamChanged.getSchema());
 
+        if (streamChanged.getRegist()) {
+            MediaCacheHolder.persistentKey(streamChanged.getStream());
+        } else {
+            // 注销流
+            MediaCacheHolder.remove(streamChanged.getStream());
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", 0);
+        map.put("msg", "success");
+        return map;
     }
 
     /**
@@ -143,7 +173,6 @@ public class MediaHook {
     public void on_server_keepalive() {
 
     }
-
 
 
 }
