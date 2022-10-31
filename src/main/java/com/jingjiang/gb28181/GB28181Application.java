@@ -1,5 +1,6 @@
 package com.jingjiang.gb28181;
 
+import com.jingjiang.gb28181.configuration.properties.MediaServerProperties;
 import com.jingjiang.gb28181.media.cache.MediaCacheHolder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,9 +21,11 @@ import java.util.concurrent.ConcurrentMap;
 @SpringBootApplication
 public class GB28181Application {
 
+    private final MediaServerProperties mediaServerProperties;
     private final GB28181ApplicationService gb28181ApplicationService;
 
-    public GB28181Application(GB28181ApplicationService gb28181ApplicationService) {
+    public GB28181Application(MediaServerProperties mediaServerProperties, GB28181ApplicationService gb28181ApplicationService) {
+        this.mediaServerProperties = mediaServerProperties;
         this.gb28181ApplicationService = gb28181ApplicationService;
     }
 
@@ -43,7 +46,7 @@ public class GB28181Application {
             map.put("ws-fmp4", "ws://stream.sc.remoc.asia:8080/rtp/" + stream + ".live.mp4");
             map.put("webrtc", "http://stream.sc.remoc.asia:8080/index/api/webrtc?app=rtp&stream=" + stream + "&type=play");
         } else {
-            play(host, channelId, 10000);
+            play(host, channelId, mediaServerProperties.getPort());
         }
 
         Map<String, Object> data = new HashMap<>();
