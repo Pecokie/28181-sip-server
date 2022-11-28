@@ -1,6 +1,6 @@
 package com.jingjiang.gb28181.configuration;
 
-import com.jingjiang.gb28181.Device;
+import com.jingjiang.gb28181.domain.Device;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

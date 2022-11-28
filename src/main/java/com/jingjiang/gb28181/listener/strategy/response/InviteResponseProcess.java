@@ -31,7 +31,6 @@ public class InviteResponseProcess implements ResponseProcessStrategy {
         logger.debug("回复ACK请求");
         try {
             Response response = responseEvent.getResponse();
-            System.out.println(response);
             if (response.getStatusCode() == Response.OK) {
                 ResponseEventExt event = (ResponseEventExt) responseEvent;
 

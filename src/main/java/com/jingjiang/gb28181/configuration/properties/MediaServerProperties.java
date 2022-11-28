@@ -11,8 +11,6 @@ public class MediaServerProperties {
 
     private String address;
 
-    private Integer port;
-
 
     public String getSecret() {
         return secret;
@@ -36,13 +34,5 @@ public class MediaServerProperties {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
-    public void setPort(Integer port) {
-        this.port = port;
     }
 }

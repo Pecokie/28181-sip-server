@@ -1,5 +1,7 @@
-package com.jingjiang.gb28181;
+package com.jingjiang.gb28181.application;
 
+import com.jingjiang.gb28181.domain.Device;
+import com.jingjiang.gb28181.configuration.SipRequestHeaderProvider;
 import com.jingjiang.gb28181.configuration.SipDeviceHolder;
 import com.jingjiang.gb28181.configuration.SipProviderProxy;
 import com.jingjiang.gb28181.media.cache.MediaCacheHolder;
@@ -13,7 +15,6 @@ import javax.sip.SipProvider;
 import javax.sip.header.CallIdHeader;
 import javax.sip.message.Request;
 import java.text.ParseException;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 
@@ -21,15 +22,15 @@ import java.util.Objects;
  * 视频业务类
  */
 @Service
-public class GB28181ApplicationService {
+public class SipAppService {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(GB28181ApplicationService.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(SipAppService.class);
 
     private final SipInfoContext sipInfoContext;
     private final SipProviderProxy sipProviderProxy;
     private final SipRequestHeaderProvider sipRequestHeaderProvider;
 
-    public GB28181ApplicationService(SipInfoContext sipInfoContext, SipProviderProxy sipProviderProxy, SipRequestHeaderProvider sipRequestHeaderProvider) {
+    public SipAppService(SipInfoContext sipInfoContext, SipProviderProxy sipProviderProxy, SipRequestHeaderProvider sipRequestHeaderProvider) {
         this.sipInfoContext = sipInfoContext;
         this.sipProviderProxy = sipProviderProxy;
         this.sipRequestHeaderProvider = sipRequestHeaderProvider;
@@ -93,23 +94,21 @@ public class GB28181ApplicationService {
     }
 
     /**
-     * 播放实时视频
+     * 播放实时视频, 同步代码块 简单处理并发问题
      *
      * @param host      地址
      * @param channelId 通道id
-     * @return
      * @throws InvalidArgumentException 无效参数异常
      * @throws SipException             Sip异常
      * @throws ParseException           解析异常
      */
-    public void play(String host, String channelId, Integer port) throws InvalidArgumentException, SipException, ParseException {
+    public synchronized void play(String host, String channelId, Integer port) throws InvalidArgumentException, SipException, ParseException {
         if (MediaCacheHolder.isExist(host + "@" + channelId)) {
             LOGGER.info("{}@{} 流已存在", host, channelId);
         } else {
             int ssrc = (int) ((Math.random() * 9 + 1) * 100000000);
             String context = sipInfoContext.playContext(ssrc, channelId, port);
             Device device = SipDeviceHolder.sipDeviceMap.get(host);
-            SipDeviceHolder.sipDeviceMap.forEach((s, item) -> System.out.println(item));
             SipProvider sipProvider = sipProviderProxy.getSipProvider(device.getProtocol());
             CallIdHeader callId = sipProvider.getNewCallId();
             String fromTag = String.valueOf(System.currentTimeMillis());
@@ -122,29 +121,6 @@ public class GB28181ApplicationService {
 
             // 缓存中添加此流
             MediaCacheHolder.put(Integer.toHexString(ssrc).toUpperCase(), host + "@" + channelId);
-        }
-    }
-
-    /**
-     * 下载回放视频
-     *
-     * @param host      地址
-     * @param channelId 通道号
-     * @param port      端口
-     */
-    public void playBackDownload(String host, String channelId, Integer port, LocalDateTime startTime, LocalDateTime endTime) {
-        try {
-            int ssrc = (int) ((Math.random() * 9 + 1) * 100000000);
-            String context = sipInfoContext.playBackDownloadContext(ssrc, channelId, port, startTime, endTime);
-            Device device = SipDeviceHolder.sipDeviceMap.get(host);
-            SipProvider sipProvider = sipProviderProxy.getSipProvider(device.getProtocol());
-            CallIdHeader callId = sipProvider.getNewCallId();
-            String fromTag = String.valueOf(System.currentTimeMillis());
-            String viaTag = "z9hG4bK" + System.currentTimeMillis();
-            Request request = sipRequestHeaderProvider.createInviteRequest(device.getAddress(), device.getPort(), channelId, fromTag, viaTag, context, device.getProtocol(), callId);
-            sipProvider.getNewClientTransaction(request).sendRequest();
-        } catch (ParseException | InvalidArgumentException | SipException e) {
-            e.printStackTrace();
         }
     }
 

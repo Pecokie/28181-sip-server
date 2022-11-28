@@ -1,6 +1,9 @@
 package com.jingjiang.gb28181.media.hook;
 
-import com.jingjiang.gb28181.GB28181ApplicationService;
+import com.jingjiang.gb28181.application.SipAppService;
+import com.jingjiang.gb28181.configuration.SipDeviceHolder;
+import com.jingjiang.gb28181.domain.Device;
+import com.jingjiang.gb28181.media.ImeiParser;
 import com.jingjiang.gb28181.media.api.MediaApi;
 import com.jingjiang.gb28181.media.api.domain.OpenRtpServer;
 import com.jingjiang.gb28181.media.cache.MediaCacheHolder;
@@ -25,9 +28,9 @@ public class MediaHook {
     private final static Logger LOGGER = LoggerFactory.getLogger(MediaHook.class);
 
     private final MediaApi mediaApi;
-    private final GB28181ApplicationService gb28181ApplicationService;
+    private final SipAppService gb28181ApplicationService;
 
-    public MediaHook(MediaApi mediaApi, GB28181ApplicationService gb28181ApplicationService) {
+    public MediaHook(MediaApi mediaApi, SipAppService gb28181ApplicationService) {
         this.mediaApi = mediaApi;
         this.gb28181ApplicationService = gb28181ApplicationService;
     }
@@ -110,7 +113,7 @@ public class MediaHook {
     @PostMapping("/on_stream_changed")
     public Map<String, Object> on_stream_changed(@RequestBody StreamChanged streamChanged) {
         // 持久化缓存
-        LOGGER.info("收到流-{}-事件 流ID: {} 协议: {}", streamChanged.getRegist() ? "注册" : "注销", streamChanged.getStream(), streamChanged.getSchema());
+        LOGGER.info("流-{}-事件 流ID: {} 协议: {}", streamChanged.getRegist() ? "注册" : "注销", streamChanged.getStream(), streamChanged.getSchema());
 
         if (streamChanged.getRegist()) {
             MediaCacheHolder.persistentKey(streamChanged.getStream());
@@ -129,14 +132,11 @@ public class MediaHook {
      */
     @PostMapping("/on_stream_none_reader")
     public Map<String, Object> on_stream_none_reader(@RequestBody StreamNoneReader streamNoneReader) {
+        LOGGER.info("无人观看流事件 流ID: {} 协议: {}", streamNoneReader.getStream(), streamNoneReader.getSchema());
+
         Map<String, Object> map = new HashMap<>();
         map.put("code", 0);
-        Boolean recording = mediaApi.isRecording(streamNoneReader.getStream());
-        if (recording) {
-            map.put("close", false);
-        } else {
-            map.put("close", true);
-        }
+        map.put("close", false);
         return map;
     }
 
@@ -147,17 +147,27 @@ public class MediaHook {
      */
     @PostMapping("/on_stream_not_found")
     public void on_stream_not_found(@RequestBody StreamNotFound streamNotFound) throws InvalidArgumentException, ParseException, SipException {
-        System.out.println(streamNotFound.toString());
-        OpenRtpServer openRtpServer = mediaApi.openRtpServer(streamNotFound.getStream());
-        String stream = streamNotFound.getStream();
-        String[] split = stream.split("@");
-        String host = split[0];
-        String channel = split[1];
-        // 判断 是否正确获取到 RTP推流端口
-        if (openRtpServer.getCode() == 0) {
-            gb28181ApplicationService.play(host, channel, openRtpServer.getPort());
-        }
+        String host = ImeiParser.getHost(streamNotFound.getStream());
+        String channel = ImeiParser.getChannel(streamNotFound.getStream());
 
+        // 查询是否有此主机注册
+        boolean key = SipDeviceHolder.sipDeviceMap.containsKey(host);
+        if (key) {
+            Boolean exist = MediaCacheHolder.isExist(host + "@" + channel);
+            // 判断 码流是否存在 不存在则推流
+            if (!exist) {
+                OpenRtpServer openRtpServer = mediaApi.openRtpServer(streamNotFound.getStream());
+                // 判断 是否正确获取到 RTP推流端口
+                if (openRtpServer.getCode() == 0) {
+                    gb28181ApplicationService.play(host, channel, openRtpServer.getPort());
+                }
+            } else {
+                LOGGER.warn("{} 码流已存在", streamNotFound.getStream());
+            }
+
+        } else {
+            LOGGER.warn("{} 设备不存在", streamNotFound.getStream());
+        }
     }
 
     /**

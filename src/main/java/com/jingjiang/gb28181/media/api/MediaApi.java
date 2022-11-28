@@ -34,7 +34,7 @@ public class MediaApi {
         MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
         map.add("secret", mediaServerProperties.getSecret());
         map.add("port", 0);
-        map.add("enable_tcp", 1);
+        map.add("enable_tcp", 0);
         map.add("stream_id", streamId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

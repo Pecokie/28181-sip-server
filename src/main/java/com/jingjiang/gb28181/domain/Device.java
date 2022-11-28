@@ -1,4 +1,4 @@
-package com.jingjiang.gb28181;
+package com.jingjiang.gb28181.domain;
 
 import javax.sip.header.CallIdHeader;
 

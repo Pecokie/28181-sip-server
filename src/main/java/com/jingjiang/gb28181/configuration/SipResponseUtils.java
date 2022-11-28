@@ -1,4 +1,4 @@
-package com.jingjiang.gb28181;
+package com.jingjiang.gb28181.configuration;
 
 import com.jingjiang.gb28181.configuration.SipProviderProxy;
 import org.springframework.stereotype.Component;
